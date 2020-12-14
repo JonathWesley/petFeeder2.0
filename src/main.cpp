@@ -1,3 +1,8 @@
+/*
+Alunos:
+  Jonath Wesley Herdt
+  Lucas José da Cunha
+*/
 #include <Arduino.h>
 
 void setup() {
