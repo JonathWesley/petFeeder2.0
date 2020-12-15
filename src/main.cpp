@@ -4,10 +4,20 @@ Alunos:
   Lucas José da Cunha
 */
 #include <WiFi.h>
+#include <NTPClient.h>
 
 //Definindo as credenciais da rede Wi-Fi
 const char *ssid = "Unifique_WIFI_6387";
 const char *password = "68866696";
+
+// Define NTP Client to get time
+WiFiUDP ntpUDP;
+NTPClient timeClient(ntpUDP);
+
+// Variables to save date and time
+String formattedDate;
+String dayStamp;
+String timeStamp;
 
 // Define a porta do server como 80
 WiFiServer server(80);
@@ -22,8 +32,16 @@ unsigned long previousTime = 0;
 // Define o tempo maximo em milisegundos (exemplo: 2000ms = 2s)
 const long timeoutTime = 2000;
 
+// Variaveis de auxilio
+int posicaoQuantidade;
+String Squantidade = "100", Sdespejar = "of";
+
 // Variaveis para uso do sistema
-int som = 1;
+bool som = false, despejar = false;
+int quantidade = 100, quantidadeHorarios = 1;
+String horarios[5];
+
+void despejarRacao();
 
 void setup() {
   Serial.begin(115200);
@@ -40,9 +58,40 @@ void setup() {
   Serial.println("Endereco IP: ");
   Serial.println(WiFi.localIP());
   server.begin();
+
+  // Initialize a NTPClient to get time
+  timeClient.begin();
+  // Set offset time in seconds to adjust for your timezone, for example:
+  // GMT +1 = 3600
+  // GMT +8 = 28800
+  // GMT -1 = -3600
+  // GMT 0 = 0
+  timeClient.setTimeOffset(-10800);
 }
 
 void loop() {
+  while(!timeClient.update()) {
+    timeClient.forceUpdate();
+  }
+  // The formattedDate comes with the following format:
+  // 2018-05-28T16:00:13Z
+  // We need to extract date and time
+  formattedDate = timeClient.getFormattedDate();
+  //Serial.println(formattedDate);
+  // Extract date
+  int splitT = formattedDate.indexOf("T");
+  dayStamp = formattedDate.substring(0, splitT);
+  //Serial.print("DATE: ");
+  //Serial.println(dayStamp);
+  // Extract time
+  timeStamp = formattedDate.substring(splitT+1, formattedDate.length()-1);
+  //Serial.print("HOUR: ");
+  //Serial.println(timeStamp);
+
+  if(despejar){
+    despejarRacao();
+  }
+
   // Servidor disponivel para acesso
   WiFiClient client = server.available();
   // Caso haja alguma conexao
@@ -55,7 +104,7 @@ void loop() {
     while (client.connected() && currentTime - previousTime <= timeoutTime) { 
       currentTime = millis();
       // Caso haver algum dado para ler
-      if (client.available()){ 
+      if (client.available()){
         char c = client.read();
         Serial.write(c);
         header += c;
@@ -71,6 +120,21 @@ void loop() {
             client.println("Conexao: fechada");
             client.println();
 
+            if(header.indexOf("quantidade") != -1){
+              posicaoQuantidade = header.indexOf("quantidade") + 11;
+              Squantidade = header.substring(posicaoQuantidade, posicaoQuantidade + 3);
+              quantidade = Squantidade.toInt();
+            }
+
+            if(header.indexOf("despejar") != -1){
+              posicaoQuantidade = header.indexOf("despejar") + 9;
+              Sdespejar = header.substring(posicaoQuantidade, posicaoQuantidade + 2);
+              if(Sdespejar == "on"){
+                despejar = true;
+                header[posicaoQuantidade + 1] = 'f';
+              }
+            }
+
             // Pagina Web em HTML
             client.println("<!DOCTYPE html><html>");
             client.println("<head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">");
@@ -84,16 +148,16 @@ void loop() {
             client.println("<form id=\"myForm\"><center>");
             client.println("<h3>Racao</h3>");
             client.println("<div class=\"btn-group\">");
-            client.println("<button class=\"buttonDefault\" name=\"power\" value=\"despejar\" type=\"submit\">Despejar</button>");
+            client.println("<button class=\"buttonDefault\" name=\"despejar\" value=\"on\" type=\"submit\">Despejar</button>");
             client.println("</div><br>");
             client.println("<h3>Som</h3>");
             client.println("<div class=\"btn-group\">");
             if(som){
-              client.println("<button class=\"buttonDefault\" name=\"som\" value=\"SomOff\" type=\"submit\">ON</button>");
+              client.println("<button class=\"buttonDefault\" name=\"som\" value=\"SomOff\" type=\"submit\">OFF</button>");
             }else{
-              client.println("<button class=\"buttonDefault\" name=\"som\" value=\"SomOn\" type=\"submit\">OFF</button>");
+              client.println("<button class=\"buttonDefault\" name=\"som\" value=\"SomOn\" type=\"submit\">ON</button>");
             }
-            client.println("</div></form>");
+            client.println("</div>");
             client.println("<h3>Quantidade</h3></center>");
             client.println("<div class=\"btn-group\">");
             client.println("<button class=\"buttonQuantidade\" name=\"quantidade\" value=\"100\" type=\"submit\">100 g</button>");
@@ -104,7 +168,7 @@ void loop() {
             client.println("<h3>Horarios</h3>");
             client.println("<div class=\"horariosContainer\" id=\"horariosContainer\">");
             client.println("<input type=\"time\" value=\"\" name=\"horario0\" id=\"horario0\"/><a class=\"buttonAdd\" href=\"javascript:void(0)\" onclick=\"addHorario(0)\" id=\"addLink0\"> +</a>");
-            client.println("</div><br>");
+            client.println("</div><br></form>");
             client.println("<script>");
             client.println("function addHorario(id){");
             client.println("if(id < 4){");
@@ -178,4 +242,9 @@ void loop() {
   }
 
   delay(10);
+}
+
+void despejarRacao(){
+  Serial.println("Despejando racao!");
+  despejar = false;
 }
