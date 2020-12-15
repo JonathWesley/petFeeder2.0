@@ -56,8 +56,8 @@ const int ledVermelho = 18; // R = 330 Ohm
 const int ledVerde = 12;    // R = 330 Ohm
 const int buzzer = 13;      // R = 330 Ohm
 //const int motor = 4;        // 
-const int lcd_scl = 22;
-const int lcd_sda = 21;
+// const int lcd_scl = 22;
+// const int lcd_sda = 21;
 
 
 void despejarRacao();
@@ -73,7 +73,8 @@ void setup() {
   pinMode(ledVermelho, OUTPUT);
   pinMode(ledVerde, OUTPUT);
   pinMode(buzzer, OUTPUT);
-  lcd.begin(lcd_sda, lcd_scl);// initialize the lcd with SDA and SCL pins
+  // initialize the lcd with SDA and SCL pins
+  lcd.init();
   // Print a message to the LCD.
   lcd.backlight();
   lcd.setCursor(0,0);
