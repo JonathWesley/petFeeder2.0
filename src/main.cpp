@@ -42,10 +42,28 @@ int quantidade = 100, quantidadeHorarios = 1;
 String horarios[5];
 String ultimoHorario;
 
+// Define as saídas para seus pinos GPIO
+const int botaoOk = 15;     // R = 10K Ohm
+const int botaoVoltar = 2;  // R = 10K Ohm
+const int botaoMais = 4;    // R = 10K Ohm
+const int botaoMenos = 5;   // R = 10K Ohm
+const int ledVermelho = 18; // R = 330 Ohm
+const int ledVerde = 19;    // R = 330 Ohm
+const int buzzer = 21;      // R = 330 Ohm
+
 void despejarRacao();
 
 void setup() {
   Serial.begin(115200);
+
+  // Inializa as variaveis de saida e entrada
+  pinMode(botaoOk, INPUT);
+  pinMode(botaoVoltar, INPUT);
+  pinMode(botaoMais, INPUT);
+  pinMode(botaoMenos, INPUT);
+  pinMode(ledVermelho, OUTPUT);
+  pinMode(ledVerde, OUTPUT);
+  pinMode(buzzer, OUTPUT);
 
   // inicializando vetor de horarios
   horarios[0] = "12:00";
@@ -75,6 +93,8 @@ void setup() {
   // GMT -1 = -3600
   // GMT 0 = 0
   timeClient.setTimeOffset(-10800);
+
+  digitalWrite(ledVermelho, HIGH);
 }
 
 void loop() {
@@ -390,10 +410,15 @@ void loop() {
 
 void despejarRacao(){
   Serial.println("Despejando racao!");
+  digitalWrite(ledVerde, HIGH);
   if(som){
-    Serial.println("BIIIIIIPP!");
-  }else{
-    Serial.println("*silencio*");
+    digitalWrite(buzzer, HIGH);
   }
+
+  delay(2000);
+  Serial.println("Despejando racao!");
+
   despejar = false;
+  digitalWrite(buzzer, LOW);
+  digitalWrite(ledVerde, LOW);
 }
