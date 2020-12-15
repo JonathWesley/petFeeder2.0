@@ -40,6 +40,7 @@ String Squantidade = "100", Sdespejar = "of", Ssom = "of", Shora = "12", Sminuto
 bool som = false, despejar = false;
 int quantidade = 100, quantidadeHorarios = 1;
 String horarios[5];
+String ultimoHorario;
 
 void despejarRacao();
 
@@ -77,13 +78,6 @@ void setup() {
 }
 
 void loop() {
-  if(despejar){
-    despejarRacao();
-  }
-  for(int i = 0; i < quantidadeHorarios; i++){
-    Serial.println(horarios[i]);
-  }
-
   while(!timeClient.update()) {
     timeClient.forceUpdate();
   }
@@ -101,6 +95,19 @@ void loop() {
   timeStamp = formattedDate.substring(splitT+1, formattedDate.length()-4);
   //Serial.print("HOUR: ");
   //Serial.println(timeStamp);
+
+  for(int i = 0; i < quantidadeHorarios; i++){
+    if(horarios[i] == timeStamp){
+      if(ultimoHorario != timeStamp){
+        despejar = true;
+        ultimoHorario = timeStamp;
+      }
+    }
+  }
+
+  if(despejar){
+    despejarRacao();
+  }
 
   // Servidor disponivel para acesso
   WiFiClient client = server.available();
