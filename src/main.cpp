@@ -48,8 +48,8 @@ const int botaoVoltar = 2;  // R = 10K Ohm
 const int botaoMais = 4;    // R = 10K Ohm
 const int botaoMenos = 5;   // R = 10K Ohm
 const int ledVermelho = 18; // R = 330 Ohm
-const int ledVerde = 19;    // R = 330 Ohm
-const int buzzer = 21;      // R = 330 Ohm
+const int ledVerde = 12;    // R = 330 Ohm
+const int buzzer = 13;      // R = 330 Ohm
 
 void despejarRacao();
 
