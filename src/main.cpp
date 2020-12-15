@@ -5,10 +5,15 @@ Alunos:
 */
 #include <WiFi.h>
 #include <NTPClient.h>
+#include <Wire.h> 
+#include <LiquidCrystal_I2C.h>
+
+// Iniciando o LCD
+LiquidCrystal_I2C lcd(0x27, 16, 2);//set the LCD address to 0x27 for a 16 chars and 2 line display
 
 //Definindo as credenciais da rede Wi-Fi
-const char *ssid = "Unifique_WIFI_6387";
-const char *password = "68866696";
+const char *ssid = "Assembly";
+const char *password = "#code1304";
 
 // Define NTP Client to get time
 WiFiUDP ntpUDP;
@@ -50,6 +55,10 @@ const int botaoMenos = 5;   // R = 10K Ohm
 const int ledVermelho = 18; // R = 330 Ohm
 const int ledVerde = 19;    // R = 330 Ohm
 const int buzzer = 21;      // R = 330 Ohm
+//const int motor = 4;        // 
+const int lcd_scl = 22;
+const int lcd_sda = 21;
+
 
 void despejarRacao();
 
@@ -64,6 +73,13 @@ void setup() {
   pinMode(ledVermelho, OUTPUT);
   pinMode(ledVerde, OUTPUT);
   pinMode(buzzer, OUTPUT);
+  lcd.begin(lcd_sda, lcd_scl);// initialize the lcd with SDA and SCL pins
+  // Print a message to the LCD.
+  lcd.backlight();
+  lcd.setCursor(0,0);
+  lcd.print("Hello, world!");
+  lcd.setCursor(0,1);
+  lcd.print("by Lukinha");
 
   // inicializando vetor de horarios
   horarios[0] = "12:00";
@@ -98,6 +114,20 @@ void setup() {
 }
 
 void loop() {
+
+  // set cursor to first column, first row
+  lcd.setCursor(0, 0);
+  // print message
+  lcd.print("CHEGAAAA!");
+  delay(1000);
+  // clears the display to print new message
+  lcd.clear();
+  // set cursor to first column, second row
+  lcd.setCursor(0,1);
+  lcd.print("Hello, World!");
+  delay(1000);
+  lcd.clear();
+
   while(!timeClient.update()) {
     timeClient.forceUpdate();
   }
