@@ -33,8 +33,8 @@ unsigned long previousTime = 0;
 const long timeoutTime = 2000;
 
 // Variaveis de auxilio
-int posicaoQuantidade;
-String Squantidade = "100", Sdespejar = "of";
+int posicaoString;
+String Squantidade = "100", Sdespejar = "of", Ssom = "of", Shora = "12", Sminuto = "00";
 
 // Variaveis para uso do sistema
 bool som = false, despejar = false;
@@ -45,6 +45,13 @@ void despejarRacao();
 
 void setup() {
   Serial.begin(115200);
+
+  // inicializando vetor de horarios
+  horarios[0] = "12:00";
+  for(int i = 1; i < 5; i++){
+    horarios[i] = "-1";
+  }
+
    // Conecta a rede Wi-Fi com o SSID e password
   Serial.print("Conectando a rede ");
   Serial.println(ssid);
@@ -70,6 +77,13 @@ void setup() {
 }
 
 void loop() {
+  if(despejar){
+    despejarRacao();
+  }
+  for(int i = 0; i < quantidadeHorarios; i++){
+    Serial.println(horarios[i]);
+  }
+
   while(!timeClient.update()) {
     timeClient.forceUpdate();
   }
@@ -80,17 +94,13 @@ void loop() {
   //Serial.println(formattedDate);
   // Extract date
   int splitT = formattedDate.indexOf("T");
-  dayStamp = formattedDate.substring(0, splitT);
+  //dayStamp = formattedDate.substring(0, splitT);
   //Serial.print("DATE: ");
   //Serial.println(dayStamp);
   // Extract time
-  timeStamp = formattedDate.substring(splitT+1, formattedDate.length()-1);
+  timeStamp = formattedDate.substring(splitT+1, formattedDate.length()-4);
   //Serial.print("HOUR: ");
   //Serial.println(timeStamp);
-
-  if(despejar){
-    despejarRacao();
-  }
 
   // Servidor disponivel para acesso
   WiFiClient client = server.available();
@@ -121,43 +131,106 @@ void loop() {
             client.println();
 
             if(header.indexOf("quantidade") != -1){
-              posicaoQuantidade = header.indexOf("quantidade") + 11;
-              Squantidade = header.substring(posicaoQuantidade, posicaoQuantidade + 3);
+              posicaoString = header.indexOf("quantidade") + 11;
+              Squantidade = header.substring(posicaoString, posicaoString + 3);
               quantidade = Squantidade.toInt();
             }
 
             if(header.indexOf("despejar") != -1){
-              posicaoQuantidade = header.indexOf("despejar") + 9;
-              Sdespejar = header.substring(posicaoQuantidade, posicaoQuantidade + 2);
+              posicaoString = header.indexOf("despejar") + 9;
+              Sdespejar = header.substring(posicaoString, posicaoString + 2);
               if(Sdespejar == "on"){
                 despejar = true;
-                header[posicaoQuantidade + 1] = 'f';
+                header[posicaoString + 1] = 'f';
               }
+            }
+
+            if(header.indexOf("som") != -1){
+              posicaoString = header.indexOf("som") + 4;
+              Ssom = header.substring(posicaoString, posicaoString + 2);
+              if(Ssom == "on"){
+                som = true;
+              }else{
+                som = false;
+              }
+            }
+
+            if(header.indexOf("horario0") != -1){
+              posicaoString = header.indexOf("horario0") + 9;
+              Shora = header.substring(posicaoString, posicaoString + 2);
+              Sminuto = header.substring(posicaoString + 5, posicaoString + 7);
+              horarios[0] = Shora + ":" + Sminuto;
+              quantidadeHorarios = 1;
+            }
+
+            if(header.indexOf("horario1") != -1){
+              posicaoString = header.indexOf("horario1") + 9;
+              Shora = header.substring(posicaoString, posicaoString + 2);
+              Sminuto = header.substring(posicaoString + 5, posicaoString + 7);
+              horarios[1] = Shora + ":" + Sminuto;
+              quantidadeHorarios = 2;
+            }else{
+              horarios[1] = "-1";
+            }
+
+            if(header.indexOf("horario2") != -1){
+              posicaoString = header.indexOf("horario2") + 9;
+              Shora = header.substring(posicaoString, posicaoString + 2);
+              Sminuto = header.substring(posicaoString + 5, posicaoString + 7);
+              horarios[2] = Shora + ":" + Sminuto;
+              quantidadeHorarios = 3;
+            }else{
+              horarios[2] = "-1";
+            }
+
+            if(header.indexOf("horario3") != -1){
+              posicaoString = header.indexOf("horario3") + 9;
+              Shora = header.substring(posicaoString, posicaoString + 2);
+              Sminuto = header.substring(posicaoString + 5, posicaoString + 7);
+              horarios[3] = Shora + ":" + Sminuto;
+              quantidadeHorarios = 4;
+            }else{
+              horarios[3] = "-1";
+            }
+
+            if(header.indexOf("horario4") != -1){
+              posicaoString = header.indexOf("horario4") + 9;
+              Shora = header.substring(posicaoString, posicaoString + 2);
+              Sminuto = header.substring(posicaoString + 5, posicaoString + 7);
+              horarios[4] = Shora + ":" + Sminuto;
+              quantidadeHorarios = 5;
+            }else{
+              horarios[4] = "-1";
             }
 
             // Pagina Web em HTML
             client.println("<!DOCTYPE html><html>");
             client.println("<head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">");
             client.println("<link rel=\"icon\" href=\"data:,\">");
+            // styles
             client.println("<style>html { font-family: Helvetica; display: inline-block; margin: 0px auto; text-align: center;}");
             client.println(".buttonDefault { border: 2px solid #000000; border-radius: 50%; color: black; padding: 15px 32px; text-align: center; text-decoration: none; display: inline-block; font-size: 16px; margin: 4px 2px; cursor: pointer; }");
             client.println(".buttonQuantidade { border: 2px solid #000000; color: black; padding: 15px 32px; text-align: center; text-decoration: none; display: inline-block; font-size: 16px; margin: 4px 2px; cursor: pointer; }");
             client.println(".buttonAdd { text-decoration: none !important; }");
             client.println("</style></head>");
+            // titulo
             client.println("<body><center><h1>PetFeeder</h1><h5>by Jonath & Lucas</h5></center><br>");
             client.println("<form id=\"myForm\"><center>");
+            // botao de despejar racao imediatamente
             client.println("<h3>Racao</h3>");
             client.println("<div class=\"btn-group\">");
             client.println("<button class=\"buttonDefault\" name=\"despejar\" value=\"on\" type=\"submit\">Despejar</button>");
             client.println("</div><br>");
+            // botao para ligar/desligar som
             client.println("<h3>Som</h3>");
             client.println("<div class=\"btn-group\">");
             if(som){
-              client.println("<button class=\"buttonDefault\" name=\"som\" value=\"SomOff\" type=\"submit\">OFF</button>");
+              client.println("<button class=\"buttonDefault\" name=\"som\" value=\"of\" type=\"submit\">OFF</button>");
             }else{
-              client.println("<button class=\"buttonDefault\" name=\"som\" value=\"SomOn\" type=\"submit\">ON</button>");
+              client.println("<button class=\"buttonDefault\" name=\"som\" value=\"on\" type=\"submit\">ON</button>");
             }
             client.println("</div>");
+            // botoes para configurar a quantidade de racao
             client.println("<h3>Quantidade</h3></center>");
             client.println("<div class=\"btn-group\">");
             client.println("<button class=\"buttonQuantidade\" name=\"quantidade\" value=\"100\" type=\"submit\">100 g</button>");
@@ -165,10 +238,71 @@ void loop() {
             client.println("<button class=\"buttonQuantidade\" name=\"quantidade\" value=\"300\" type=\"submit\">300 g</button>");
             client.println("<button class=\"buttonQuantidade\" name=\"quantidade\" value=\"400\" type=\"submit\">400 g</button>");
             client.println("<button class=\"buttonQuantidade\" name=\"quantidade\" value=\"500\" type=\"submit\">500 g</button><br></div>");
+            // configuracao de horarios
             client.println("<h3>Horarios</h3>");
             client.println("<div class=\"horariosContainer\" id=\"horariosContainer\">");
-            client.println("<input type=\"time\" value=\"\" name=\"horario0\" id=\"horario0\"/><a class=\"buttonAdd\" href=\"javascript:void(0)\" onclick=\"addHorario(0)\" id=\"addLink0\"> +</a>");
-            client.println("</div><br></form>");
+            // primeiro horario
+            client.print("<input type=\"time\" value=\"");
+            client.print(horarios[0]);
+            client.print("\" name=\"horario0\" id=\"horario0\"/><a class=\"buttonAdd\" href=\"javascript:void(0)\" onclick=\"addHorario(0)\" id=\"addLink0\" ");
+            if(horarios[1] != "-1"){
+              client.print("style=\"display: none;\"");
+            }
+            client.println("> +</a>");
+            // segundo horario
+            if(horarios[1] != "-1"){
+              client.print("<br><input type=\"time\" value=\"");
+              client.print(horarios[1]);
+              client.print("\" name=\"horario1\" id=\"horario1\"/><a class=\"buttonAdd\" href=\"javascript:void(0)\" onclick=\"addHorario(1)\" id=\"addLink1\" ");
+              if(horarios[2] != "-1"){
+                client.print("style=\"display: none;\"");
+              }
+              client.print("> +</a>");
+              client.print("<a class=\"buttonAdd\" href=\"javascript:void(0)\" onclick=\"removeElement(1)\" id=\"deleteLink1\" ");
+              if(horarios[2] != "-1"){
+                client.print("style=\"display: none;\"");
+              }
+              client.println("> -</a>");
+            }
+            // terceiro horario
+            if(horarios[2] != "-1"){
+              client.print("<br><input type=\"time\" value=\"");
+              client.print(horarios[2]);
+              client.print("\" name=\"horario2\" id=\"horario2\"/><a class=\"buttonAdd\" href=\"javascript:void(0)\" onclick=\"addHorario(2)\" id=\"addLink2\" ");
+              if(horarios[3] != "-1"){
+                client.print("style=\"display: none;\"");
+              }
+              client.print("> +</a>");
+              client.print("<a class=\"buttonAdd\" href=\"javascript:void(0)\" onclick=\"removeElement(2)\" id=\"deleteLink2\" ");
+              if(horarios[3] != "-1"){
+                client.print("style=\"display: none;\"");
+              }
+              client.println("> -</a>");
+            }
+            // quarto horario
+            if(horarios[3] != "-1"){
+              client.print("<br><input type=\"time\" value=\"");
+              client.print(horarios[3]);
+              client.print("\" name=\"horario3\" id=\"horario3\"/><a class=\"buttonAdd\" href=\"javascript:void(0)\" onclick=\"addHorario(3)\" id=\"addLink3\" ");
+              if(horarios[4] != "-1"){
+                client.print("style=\"display: none;\"");
+              }
+              client.print("> +</a>");
+              client.print("<a class=\"buttonAdd\" href=\"javascript:void(0)\" onclick=\"removeElement(3)\" id=\"deleteLink3\" ");
+              if(horarios[4] != "-1"){
+                client.print("style=\"display: none;\"");
+              }
+              client.println("> -</a>");
+            }
+            // quinto horario
+            if(horarios[4] != "-1"){
+              client.print("<br><input type=\"time\" value=\"");
+              client.print(horarios[4]);
+              client.print("\" name=\"horario4\" id=\"horario4\"/>");
+              client.print("<a class=\"buttonAdd\" href=\"javascript:void(0)\" onclick=\"removeElement(4)\" id=\"deleteLink4\"> -</a>");
+            }
+            client.println("</div><br>");
+            client.println("<button type=\"submit\">Salvar horarios</button></form>");
             client.println("<script>");
             client.println("function addHorario(id){");
             client.println("if(id < 4){");
@@ -241,10 +375,15 @@ void loop() {
     Serial.println("");
   }
 
-  delay(10);
+  delay(1000);
 }
 
 void despejarRacao(){
   Serial.println("Despejando racao!");
+  if(som){
+    Serial.println("BIIIIIIPP!");
+  }else{
+    Serial.println("*silencio*");
+  }
   despejar = false;
 }
