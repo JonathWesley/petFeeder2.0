@@ -251,7 +251,7 @@ void loop() {
             client.println("> +</a>");
             // segundo horario
             if(horarios[1] != "-1"){
-              client.print("<br><input type=\"time\" value=\"");
+              client.print("<br id=\"br1\"><input type=\"time\" value=\"");
               client.print(horarios[1]);
               client.print("\" name=\"horario1\" id=\"horario1\"/><a class=\"buttonAdd\" href=\"javascript:void(0)\" onclick=\"addHorario(1)\" id=\"addLink1\" ");
               if(horarios[2] != "-1"){
@@ -266,7 +266,7 @@ void loop() {
             }
             // terceiro horario
             if(horarios[2] != "-1"){
-              client.print("<br><input type=\"time\" value=\"");
+              client.print("<br id=\"br2\"><input type=\"time\" value=\"");
               client.print(horarios[2]);
               client.print("\" name=\"horario2\" id=\"horario2\"/><a class=\"buttonAdd\" href=\"javascript:void(0)\" onclick=\"addHorario(2)\" id=\"addLink2\" ");
               if(horarios[3] != "-1"){
@@ -281,7 +281,7 @@ void loop() {
             }
             // quarto horario
             if(horarios[3] != "-1"){
-              client.print("<br><input type=\"time\" value=\"");
+              client.print("<br id=\"br3\"><input type=\"time\" value=\"");
               client.print(horarios[3]);
               client.print("\" name=\"horario3\" id=\"horario3\"/><a class=\"buttonAdd\" href=\"javascript:void(0)\" onclick=\"addHorario(3)\" id=\"addLink3\" ");
               if(horarios[4] != "-1"){
@@ -296,13 +296,15 @@ void loop() {
             }
             // quinto horario
             if(horarios[4] != "-1"){
-              client.print("<br><input type=\"time\" value=\"");
+              client.print("<br id=\"br4\"><input type=\"time\" value=\"");
               client.print(horarios[4]);
               client.print("\" name=\"horario4\" id=\"horario4\"/>");
               client.print("<a class=\"buttonAdd\" href=\"javascript:void(0)\" onclick=\"removeElement(4)\" id=\"deleteLink4\"> -</a>");
             }
+            // submit horarios
             client.println("</div><br>");
             client.println("<button type=\"submit\">Salvar horarios</button></form>");
+            //funcao para adicionar horarios
             client.println("<script>");
             client.println("function addHorario(id){");
             client.println("if(id < 4){");
@@ -338,6 +340,7 @@ void loop() {
             client.println("linkDelete.setAttribute('class', 'buttonAdd');");
             client.println("linkDelete.setAttribute('onclick', 'removeElement('+id+')');");
             client.println("horarios.appendChild(linkDelete);}}");
+            // funcao para remover horarios
             client.println("function removeElement(id){");
             client.println("var elem = document.getElementById('horario'+id);");
             client.println("elem.parentNode.removeChild(elem);");
