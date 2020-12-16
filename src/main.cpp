@@ -40,6 +40,7 @@ const long timeoutTime = 2000;
 // Variaveis de auxilio
 int posicaoString;
 String Squantidade = "100", Sdespejar = "of", Ssom = "of", Shora = "12", Sminuto = "00";
+bool sair;
 
 // Variaveis para uso do sistema
 bool som = false, despejar = false;
@@ -48,19 +49,17 @@ String horarios[5];
 String ultimoHorario;
 
 // Define as saídas para seus pinos GPIO
-const int botaoOk = 15;     // R = 10K Ohm
-const int botaoVoltar = 2;  // R = 10K Ohm
-const int botaoMais = 4;    // R = 10K Ohm
-const int botaoMenos = 5;   // R = 10K Ohm
+const int botaoOk = 5;     // R = 10K Ohm
+const int botaoVoltar = 4;  // R = 10K Ohm
+const int botaoMais = 2;    // R = 10K Ohm
+const int botaoMenos = 15;   // R = 10K Ohm
 const int ledVermelho = 18; // R = 330 Ohm
 const int ledVerde = 12;    // R = 330 Ohm
 const int buzzer = 13;      // R = 330 Ohm
-//const int motor = 4;        // 
-// const int lcd_scl = 22;
-// const int lcd_sda = 21;
-
 
 void despejarRacao();
+void configurarQuantidade();
+void configurarSom();
 
 void setup() {
   Serial.begin(115200);
@@ -78,9 +77,9 @@ void setup() {
   // Print a message to the LCD.
   lcd.backlight();
   lcd.setCursor(0,0);
-  lcd.print("Hello, world!");
+  lcd.print("Iniciando...");
   lcd.setCursor(0,1);
-  lcd.print("by Lukinha");
+  lcd.print("by Jonath e Lucas");
 
   // inicializando vetor de horarios
   horarios[0] = "12:00";
@@ -115,19 +114,10 @@ void setup() {
 }
 
 void loop() {
-
-  // set cursor to first column, first row
-  lcd.setCursor(0, 0);
-  // print message
-  lcd.print("CHEGAAAA!");
-  delay(1000);
-  // clears the display to print new message
-  lcd.clear();
-  // set cursor to first column, second row
-  lcd.setCursor(0,1);
-  lcd.print("Hello, World!");
-  delay(1000);
-  lcd.clear();
+  if(digitalRead(botaoOk) == HIGH){
+    //Serial.println("botaoOK");
+    configurarQuantidade();
+  }
 
   while(!timeClient.update()) {
     timeClient.forceUpdate();
@@ -146,6 +136,10 @@ void loop() {
   timeStamp = formattedDate.substring(splitT+1, formattedDate.length()-4);
   //Serial.print("HOUR: ");
   //Serial.println(timeStamp);
+
+  lcd.clear();
+  lcd.print("Horario: ");
+  lcd.print(timeStamp);
 
   for(int i = 0; i < quantidadeHorarios; i++){
     if(horarios[i] == timeStamp){
@@ -441,15 +435,69 @@ void loop() {
 
 void despejarRacao(){
   Serial.println("Despejando racao!");
+  lcd.clear();
+  lcd.print("Despejando racao");
+  lcd.setCursor(0,1);
+  lcd.print("Qnt: ");
+  lcd.print(quantidade);
+  lcd.print(" g");
   digitalWrite(ledVerde, HIGH);
   if(som){
     digitalWrite(buzzer, HIGH);
   }
 
-  delay(2000);
-  Serial.println("Despejando racao!");
+  delay(quantidade * 20);
 
   despejar = false;
   digitalWrite(buzzer, LOW);
   digitalWrite(ledVerde, LOW);
+}
+
+void configurarQuantidade(){
+  lcd.clear();
+  lcd.print("Qnt: ");
+  while(1){
+    lcd.setCursor(5,0);
+    lcd.print(quantidade);
+    lcd.print(" g");
+    if(digitalRead(botaoMais)){
+      if(quantidade < 500){
+        quantidade += 100;
+      }
+    }
+    if(digitalRead(botaoMenos)){
+      if(quantidade > 100){
+        quantidade -= 100;
+      }
+    }
+    if(digitalRead(botaoOk)){
+      configurarSom();
+    }
+    delay(10);
+  }
+}
+
+void configurarSom(){
+  lcd.clear();
+  lcd.print("Som: ");
+  sair = false;
+  while(1){
+    lcd.setCursor(5,0);
+    if(som){
+      lcd.print("Ligado");
+    }else{
+      lcd.print("Desligado");
+    }
+    if(digitalRead(botaoMais) || digitalRead(botaoMenos)){
+      if(som){
+        som = false;
+      }else{
+        som = true;
+      }
+    }
+    if(digitalRead(botaoOk)){
+      sair = true;
+    }
+    delay(10);
+  }
 }
