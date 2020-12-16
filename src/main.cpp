@@ -46,7 +46,7 @@ bool sair, ultimaAtt = false;
 bool som = false, despejar = false;
 int quantidade = 100, quantidadeHorarios = 1;
 String horarios[5];
-String ultimoHorario;
+String ultimoHorario, ultimaRefeicao = "12:00";
 
 // Define as saídas para seus pinos GPIO
 const int botaoOk = 19;     // R = 10K Ohm
@@ -374,6 +374,11 @@ void loop() {
             // submit horarios
             client.println("</div><br>");
             client.println("<button type=\"submit\">Salvar horarios</button></form>");
+            // ultima refeicao
+            client.println("<br><div>");
+            client.println("<h2>Ultima refeicao</h2>");
+            client.println(ultimaRefeicao);
+            client.println("</div>");
             //funcao para adicionar horarios
             client.println("<script>");
             client.println("function addHorario(id){");
@@ -471,6 +476,8 @@ void despejarRacao(){
   despejar = false;
   digitalWrite(buzzer, LOW);
   digitalWrite(ledVerde, LOW);
+
+  ultimaRefeicao = timeStamp;
 }
 
 void configurarQuantidade(){
