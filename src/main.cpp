@@ -40,7 +40,7 @@ const long timeoutTime = 2000;
 // Variaveis de auxilio
 int posicaoString;
 String Squantidade = "100", Sdespejar = "of", Ssom = "of", Shora = "12", Sminuto = "00";
-bool sair;
+bool sair, ultimaAtt = false;
 
 // Variaveis para uso do sistema
 bool som = false, despejar = false;
@@ -49,13 +49,14 @@ String horarios[5];
 String ultimoHorario;
 
 // Define as saídas para seus pinos GPIO
-const int botaoOk = 5;     // R = 10K Ohm
+const int botaoOk = 19;     // R = 10K Ohm
 const int botaoVoltar = 4;  // R = 10K Ohm
 const int botaoMais = 2;    // R = 10K Ohm
 const int botaoMenos = 15;   // R = 10K Ohm
 const int ledVermelho = 18; // R = 330 Ohm
 const int ledVerde = 12;    // R = 330 Ohm
 const int buzzer = 13;      // R = 330 Ohm
+const int motor = 23;
 
 void despejarRacao();
 void configurarQuantidade();
@@ -72,6 +73,7 @@ void setup() {
   pinMode(ledVermelho, OUTPUT);
   pinMode(ledVerde, OUTPUT);
   pinMode(buzzer, OUTPUT);
+  pinMode(motor, OUTPUT);
   // initialize the lcd with SDA and SCL pins
   lcd.init();
   // Print a message to the LCD.
@@ -114,9 +116,14 @@ void setup() {
 }
 
 void loop() {
-  if(digitalRead(botaoOk) == HIGH){
-    //Serial.println("botaoOK");
+  if(digitalRead(botaoVoltar)){
+    delay(100);
     configurarQuantidade();
+  }
+
+  if(digitalRead(botaoOk)){
+    delay(100);
+    despejar = true;
   }
 
   while(!timeClient.update()) {
@@ -182,6 +189,9 @@ void loop() {
             client.println("Conexao: fechada");
             client.println();
 
+            Serial.println("HEADER:");
+            Serial.println(header);
+
             if(header.indexOf("quantidade") != -1){
               posicaoString = header.indexOf("quantidade") + 11;
               Squantidade = header.substring(posicaoString, posicaoString + 3);
@@ -192,8 +202,13 @@ void loop() {
               posicaoString = header.indexOf("despejar") + 9;
               Sdespejar = header.substring(posicaoString, posicaoString + 2);
               if(Sdespejar == "on"){
-                despejar = true;
-                header[posicaoString + 1] = 'f';
+                if(ultimaAtt == false){
+                  despejar = true;
+                  header[posicaoString + 1] = 'f';
+                  ultimaAtt = true;
+                }else{
+                  ultimaAtt = false;
+                }
               }
             }
 
@@ -254,6 +269,9 @@ void loop() {
             }else{
               horarios[4] = "-1";
             }
+
+            Serial.println("HEADER 2:");
+            Serial.println(header);
 
             // Pagina Web em HTML
             client.println("<!DOCTYPE html><html>");
@@ -413,8 +431,7 @@ void loop() {
             client.println("deleteLink.style.display = '';}}");
             client.println("</script></body></html>");
             break;
-          }
-          else { // caso ter uma nova linha, limpa a linha atual
+          } else { // caso ter uma nova linha, limpa a linha atual
             currentLine = "";
           }
         } else if (c != '\r') { // se possuir algum outro dado, retorna o caracter
@@ -422,6 +439,7 @@ void loop() {
         }
       }
     }
+  
     // Limpa o cabecalho
     header = "";
     // Encerra a conexao
@@ -446,7 +464,9 @@ void despejarRacao(){
     digitalWrite(buzzer, HIGH);
   }
 
+  digitalWrite(motor, HIGH);
   delay(quantidade * 20);
+  digitalWrite(motor, LOW);
 
   despejar = false;
   digitalWrite(buzzer, LOW);
@@ -455,22 +475,27 @@ void despejarRacao(){
 
 void configurarQuantidade(){
   lcd.clear();
-  lcd.print("Qnt: ");
-  while(1){
+  sair = false;
+  while(!sair){
+    lcd.setCursor(0,0);
+    lcd.print("Qnt: ");
     lcd.setCursor(5,0);
     lcd.print(quantidade);
-    lcd.print(" g");
+    lcd.print(" g       ");
     if(digitalRead(botaoMais)){
       if(quantidade < 500){
         quantidade += 100;
       }
+      delay(100);
     }
     if(digitalRead(botaoMenos)){
       if(quantidade > 100){
         quantidade -= 100;
       }
+      delay(100);
     }
     if(digitalRead(botaoOk)){
+      delay(100);
       configurarSom();
     }
     delay(10);
@@ -479,12 +504,13 @@ void configurarQuantidade(){
 
 void configurarSom(){
   lcd.clear();
-  lcd.print("Som: ");
   sair = false;
-  while(1){
+  while(!sair){
+    lcd.setCursor(0,0);
+    lcd.print("Som: ");
     lcd.setCursor(5,0);
     if(som){
-      lcd.print("Ligado");
+      lcd.print("Ligado   ");
     }else{
       lcd.print("Desligado");
     }
@@ -494,9 +520,15 @@ void configurarSom(){
       }else{
         som = true;
       }
+      delay(100);
     }
     if(digitalRead(botaoOk)){
       sair = true;
+      delay(100);
+    }
+    if(digitalRead(botaoVoltar)){
+      delay(100);
+      return;
     }
     delay(10);
   }
